@@ -4,5 +4,9 @@
     ],
     "python.formatting.provider": "black",
     "python.analysis.typeCheckingMode": "basic",
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "cSpell.words": [
+        "conda",
+        "nodefaults"
+    ]
 }
