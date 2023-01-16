@@ -43,37 +43,84 @@
 #         return ret
 
 
-from functools import singledispatchmethod
 import inspect
-from typing import Any, Dict, Generic, Iterable, Iterator, TypeVar
+from typing import Any, Iterable, Iterator
+
+
+def default_build_func(obj, *args, **kwargs):
+    return obj(*args, **kwargs)
 
 
 class Registry:
-    def __init__(self, namespace: str) -> None:
+    def __init__(self, namespace: str, builder=default_build_func) -> None:
         self.namespace = namespace
-        self._obj_map = {}
+        self.build_func = builder
+        self._obj_map = dict()
 
-    @singledispatchmethod
-    def add(self, obj):
-        if inspect.isclass(obj):
-            self._obj_map[obj.__name__] = (
-                obj,
-                inspect.getfullargspec(obj.__init__),
-                "this is class",
+    def add(self, name=None, force=False, module=None):
+        """Register a module.
+        A record will be added to `self._module_dict`, whose key is the class
+        name or the specified name, and value is the class itself.
+        It can be used as a decorator or a normal function.
+        Example:
+            >>> backbones = Registry('backbone')
+            >>> @backbones.register_module()
+            >>> class ResNet:
+            >>>     pass
+            >>> backbones = Registry('backbone')
+            >>> @backbones.register_module(name='mnet')
+            >>> class MobileNet:
+            >>>     pass
+            >>> backbones = Registry('backbone')
+            >>> class ResNet:
+            >>>     pass
+            >>> backbones.register_module(ResNet)
+        Args:
+            name (str | None): The module name to be registered. If not
+                specified, the class name will be used.
+            force (bool, optional): Whether to override an existing class with
+                the same name. Default: False.
+            module (type): Module class or function to be registered.
+        """
+        if not isinstance(force, bool):
+            raise TypeError(f"force must be a boolean, but got {type(force)}")
+        # NOTE: This is a walkaround to be compatible with the old api,
+        # while it may introduce unexpected bugs.
+
+        # use it as a normal method: x.register_module(module=SomeClass)
+        if module is not None:
+            self._add(module=module, module_name=name, force=force)
+            return module
+
+        # use it as a decorator: @x.register_module()
+        def wraps(module):
+            self._add(module=module, module_name=name, force=force)
+            return module
+
+        return wraps
+
+    def _add(self, module, module_name=None, force=False):
+        if not inspect.isclass(module) and not inspect.isfunction(module):
+            raise TypeError(
+                "module must be a class or a function, " f"but got {type(module)}"
             )
-        elif inspect.isfunction(obj):
-            self._obj_map[obj.__name__] = (
-                obj,
-                inspect.getfullargspec(obj),
-                "this is function",
-            )
 
-    @add.register
-    def _(self, obj: None = None):
-        pass
+        if module_name is None:
+            module_name = module.__name__
+        if isinstance(module_name, str):
+            module_name = [module_name]
 
-    def get(self, name):
+        for name in module_name:
+            if not force and name in self._obj_map:
+                raise KeyError(f"{name} is already registered " f"in {self.namespace}")
+            self._obj_map[name] = module
+
+    def get(self, name: str):
         return self._obj_map[name]
+
+    def build(self, **kwargs):
+        obj = self.get(kwargs["name"])
+        return self.build_func(obj, kwargs)
 
     def list(self) -> Iterable[str]:
         """Returns list with names of all registered items."""
@@ -106,26 +153,3 @@ class Registry:
     def __delitem__(self, name: str) -> None:
         """Removes object by giving name."""
         self._obj_map.pop(name)
-
-
-if __name__ == "__main__":
-    registry = NewRegistry("registry")
-
-    class Dummy:
-        def __init__(self, x, *, y: int = 5) -> None:
-            pass
-
-        def some_fn(self, z):
-            pass
-
-    def dummy_fn(a, b: int) -> float:
-        return a / b
-
-    registry.add(dummy_fn)
-    registry.add(Dummy)
-
-    dummy_cls = registry.get("Dummy")
-    dummy_f = registry.get("dummy_fn")
-
-    print(f"{dummy_f=}")
-    print(f"{dummy_cls=}")
