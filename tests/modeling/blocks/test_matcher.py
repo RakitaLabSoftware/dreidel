@@ -1,4 +1,4 @@
-from dreidel.modeling.aligner.blocks.matcher import FlannMatcher, BruteForceMatcher
+from dreidel.apps.aligner.blocks.matcher import FlannMatcher, BruteForceMatcher
 
 
 def test_flann():

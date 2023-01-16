@@ -1,0 +1,20 @@
+data:
+  - root: ../data/
+feature_extractors:
+  - name: min_ext
+  - name: max_ext
+  - name: avg_ext
+aligner:
+  preprocess:
+    - name: SelectRoi
+  keypoint_detector:
+    strategy:
+      name: SIFTDetector
+    nfeatures: 100000
+  matcher:
+    strategy:
+      name: FlannMatcher
+    lowes_ratio: 0.9
+    n_matches: 100000
+  transformation:
+    name: MatrixTransformation

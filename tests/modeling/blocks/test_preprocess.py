@@ -1,4 +1,4 @@
-from dreidel.modeling.aligner.blocks.preprocess import (
+from dreidel.apps.aligner.blocks.preprocess import (
     Preprocessor,
     PreprocessorList,
     Canny,

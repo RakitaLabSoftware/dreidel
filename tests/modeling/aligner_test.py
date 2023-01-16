@@ -1,10 +1,16 @@
-from dreidel.modeling.aligner.step import StepAligner
+from dreidel.apps.aligner.aligner_app import StepAligner
+from omegaconf import OmegaConf
 import pytest
+
+
+def get_cfg():
+    return OmegaConf.load("deafault.path")
 
 
 @pytest.fixture()
 def aligner():
-    return StepAligner(cfg=cfg)
+    cfg = get_cfg()
+    StepAligner(cfg=cfg)
 
 
 def test_aligner():
@@ -13,4 +19,3 @@ def test_aligner():
 
 def test_matcher(aligner):
     pass
-

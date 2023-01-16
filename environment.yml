@@ -5,7 +5,15 @@ channels:
 dependencies:
   - python=3.11.0
   - pip
-  - poetry = 1.*
-  - pytorch::pytorch
-  - pytorch::torchaudio
-  - pytorch::torchvision
+  - conda-build
+  - opencv
+  - ipykernel
+  - pydantic
+  - omegaconf
+  - gdown
+  - codecov
+  - pytest
+  - matplotlib
+  - black
+  - scikit-learn
+  - scipy

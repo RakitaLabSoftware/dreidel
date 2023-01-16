@@ -4,49 +4,24 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from dreidel.modeling.extractors.builder import EXTRACT_FUNCTIONS
-
+from dreidel.apps.extractors.builder import EXTRACT_FUNCTIONS
+from ..base import App
 from .schema import Feature, Values
 
 __all__ = ["FeatureExtractor"]
 
 
-class AFeatureExtractor(abc.ABC):
-    @abc.abstractmethod
-    def run(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def extractor_name(self):
-        """_summary_
-        """
-
-    @extractor_name.setter
-    @abc.abstractmethod
-    def extractor_name(self, extract_strategy):
-        """_summary_
-        """
-
-
-class FeatureExtractor(AFeatureExtractor):
+class FeatureExtractor(App):
     def __init__(self, root: Path) -> None:
         self.root = root
         self.root.mkdir(parents=True, exist_ok=True)
+        self.extractor = None
 
-    @property
-    def extractor_name(self):
-        return self._extractor_name
-
-    @extractor_name.setter
-    def extractor_name(self, extractor_name):
-        self._extractor_name = extractor_name
-
-    def get_extractor(self, name):
-        return EXTRACT_FUNCTIONS.get(name).build({})
+    def build_extractor(self, name):
+        self.extractor_name = name
+        self.extractor = EXTRACT_FUNCTIONS.get(name)
 
     def run(self, data: list) -> None:
-        self.extractor = self.get_extractor(self.extractor_name)
         value_list = []
         for item in tqdm(data):
             value_list.append(
@@ -64,4 +39,3 @@ class FeatureExtractor(AFeatureExtractor):
     def save(self):
         with open(self.root / f"{self.extractor_name}.json", "w+") as outfile:
             json.dump(self.schema.dict(), outfile, indent=4)
-

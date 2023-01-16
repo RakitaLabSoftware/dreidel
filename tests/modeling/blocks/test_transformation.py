@@ -1,4 +1,4 @@
-from dreidel.modeling.aligner.blocks.transformation import MatrixTransformation
+from dreidel.apps.aligner.blocks.transformation import MatrixTransformation
 
 
 def test_matrix_transformation():
